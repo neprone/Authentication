@@ -1,0 +1,274 @@
+need of input validation
+
+```
+const express = require('express')
+const app = express()
+const port = 3000
+app.use(express.json());
+// input exprected is  an array
+// if we dont use app.use(express.json());
+// body will not get extracted.
+app.post('/', (req, res) => {
+  const kidneys = req.body.kidneys;
+  const kidenyLength = kidneys.length;
+  res.send("you have" + kidenyLength + "kidneys")
+})
+
+app.listen(port, () => {
+  console.log(`Example app listening on port ${port}`)
+})
+```
+Global catches =  another middleware that you put at the end
+
+if you define a function at the end which takes 4 inputs
+
+function(err, req, res, next){}    _**[functions which take 4 inputs are defined at the end]**__**  express recognizes these functions as global catches.**_
+
+if anytime there is an exception above this guy will get called
+
+and here you can do some clean things like res.json ({
+
+msg: " something is up with our server "})
+
+what will this do it will it like in any of the routes if ever there is an exception(like some sort of error) the error will not reach the end user.
+
+like this
+
+```
+const express = require('express')
+const app = express()
+const port = 3000
+app.use(express.json());
+// input exprected is  an array
+// if we dont use app.use(express.json());
+// body will not get extracted.
+app.post('/', (req, res) => {
+  const kidneys = req.body.kidneys;
+  const kidenyLength = kidneys.length;
+  res.send("you have" + kidenyLength + "kidneys")
+})
+//global catches
+
+app.use(function(err, req, res, next){
+  res.json ({
+
+    msg: " something is up with our server "})
+})
+
+app.listen(port, () => {
+  console.log(`Example app listening on port ${port}`)
+})
+```
+go to postman make a post request to localhost:3000/
+
+and send no body then you will get a message back saying like
+
+```
+{"msg":" something is up with our server "
+```
+There we go!!
+
+the exception is hidden.
+
+Global catches help you give the user better error message
+
+```
+const express = require('express')
+const app = express()
+const port = 3000
+app.use(express.json());
+// input exprected is  an array
+// if we dont use app.use(express.json());
+// body will not get extracted.
+app.post('/', (req, res) => {
+  const kidneys = req.body.kidneys;
+  const kidenyLength = kidneys.length;
+  res.send("you have" + kidenyLength + "kidneys")
+})
+//global catches
+
+app.use(function(err, req, res, next){
+ res.status(500).send("An internal server error occured");
+});
+
+app.listen(port, () => {
+  console.log(`Example app listening on port ${port}`)
+})
+```
+like that!!
+
+## How can you do better input validation?
+```
+if (username != "harkirat" && password != "harkirat")
+```
+we can do better input validation than this because it is not scalable.
+
+## ZOD 
+look at
+
+npm install zod.
+
+```
+const express = require("express");
+const zod = require("zod");
+const app = express();
+const port = 3000;
+
+const schema = zod.array(zod.number());
+app.use(express.json());
+app.post("/health-checkup", (req, res) => {
+  const kidneys = req.body.kidneys;
+  const response = schema.safeParse(kidneys);
+  res.send({
+    response,
+  });
+});
+app.listen(port, () => {
+  console.log(`Example app listening on port ${port}`);
+});
+```
+we are basically parsing the input from the end user.
+
+schema means tis is what my input should look like.
+
+```
+const schema = zod.array(zod.number());
+```
+what did i say ? -> i said that an array of numbers will my schema.
+
+this much is enough to describe the structure of your input. basically it is the syntax for the array of numbers.
+
+how do you actually validate it?
+
+```
+const response = schema.safeParse(kidneys);
+```
+kidneys is the input that the user has sent.
+
+we send the response to the end user.
+
+```
+ res.send({
+    response,
+  });
+```
+now if we hit the post req with no body 
+
+```
+{"response":{"success":false,"error":{"issues":[{"code":"invalid_type","expected":"array","received":"undefined","path":[],"message":"Required"}],"name":"ZodError"}}}
+```
+we get this message back.
+
+
+
+LETS DO AN EXERCISE 
+
+{
+
+email => string
+
+password: atleast 8 letters
+
+country: "IN" "US"
+
+}
+
+how will you write a zod schema for this?
+
+```
+const schema = zod.object({
+email:zod.string().email(),
+password:zod.string().min(8),
+country: zod.literal("IN").or(z.literal("US"))
+
+})
+```
+the meaning of this is literally India or U.S. nothing else
+
+```
+country: zod.literal("IN").or(zod.literal("US"))
+```
+input validation!!
+
+```
+const zod = require("zod");
+// const app = express();
+// const port = 3000;
+function validateInput(obj){
+  const schema = zod.object({
+    email:zod.string().email(),
+    password:zod.string().min(8),
+  })
+  const response = schema.safeParse(obj);
+  console.log(response);
+}
+
+validateInput({
+ email: "mayank@gmail.com",
+ password:"mayankmk"
+})
+```
+
+
+
+
+## Fetch
+fetch basically represents how can you send http requests from real websites.
+
+lets build **the fetch API**
+
+```
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>replit</title>
+  <link href="style.css" rel="stylesheet" type="text/css" />
+</head>
+
+<body>
+  <script>
+    async function getAnimalData() {
+      const response = await fetch("https://fakerapi.it/api/v1/persons");
+      const finalData = response.json();
+      console.log(finalData);
+    }
+  </script>
+  <button onclick="getAnimalData()">Get animal Data</button>
+</body>
+
+</html>
+```
+we know that fetch function is an async function so it returns a promise 
+
+we can capture that promise by .then but async await syntax is slightly cleaner than promise syntax 
+
+so we await that promise and then store that promise in response variable then we extract the json file from the response 
+
+we know that the api link returns a json object. that is why we extract the json file from it.
+
+
+
+# Authentication
+anyone can hit your backend servers how do you make sure that they have access to certain resource?
+
+Dumb way = ask username and password in all requests as headers.
+
+Better way ->
+
+1) give the user back a token on signup/signIn
+
+2) ask the user to send back the token in all future requests.
+
+3) when the user logs out ask the user to forget the token.
+
+
+
+project for today
+
+A website which has 2 endpoints --> (canvas)f
+
+
+
